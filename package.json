@@ -1,0 +1,17 @@
+{
+  "name": "assessment-recommendation-api",
+  "version": "1.0.0",
+  "description": "API for recommending assessments based on job descriptions",
+  "main": "assessment-api.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "natural": "^6.5.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}

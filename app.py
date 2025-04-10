@@ -1,8 +1,6 @@
 import streamlit as st
 import requests
 import time
-from streamlit_lottie import st_lottie
-import json
 
 # Minimalist Professional Config
 st.set_page_config(
@@ -40,12 +38,6 @@ st.markdown("""
         color: #b3c5b3;
         display: inline-block;
     }
-    .ai-insights {
-        background: #333A34FF;
-        padding: 1rem;
-        border-radius: 6px;
-        margin-top: 1rem;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -56,14 +48,12 @@ st.caption("Precision matching for talent acquisition team")
 # ---- Sidebar ----
 with st.sidebar:
     st.header("Settings")
-    use_ai = st.toggle("Backend URL", value=True)
     
     with st.expander("Advanced"):
         api_url = st.text_input(
             "API URL",
-            value="https://shl-assessment-recommendor.onrender.com/recommend"
+            value="https://shl-api-y5bo.onrender.com/recommend"
         )
-    
 
 # ---- Search ----
 query = st.text_input(
@@ -76,36 +66,38 @@ if st.button("Find Assessments", type="primary") and query:
         try:
             response = requests.post(
                 api_url,
-                json={"text": query, "use_ai": use_ai},
+                json={"query": query},
                 timeout=100
             ).json()
+            
+            # Extract recommended assessments from response
+            assessments = response.get("recommended_assessments", [])
 
-            if not response:
+            if not assessments:
                 st.warning("No assessments found. Try different keywords.")
             else:
-                st.success(f"Found {len(response)} assessments")
+                st.success(f"Found {len(assessments)} assessments")
                 
-                for item in sorted(response, key=lambda x: x['score']):  # Sort by relevance
+                # Display each assessment
+                for item in assessments:
                     with st.container():
                         st.markdown(f"""
                         <div class="assessment-card">
-                            <h3>{item['name']}</h3>
+                            <h3>{item.get('url', '').split('/')[-2].replace('-', ' ').title()}</h3>
                             <div style="display:flex; justify-content:space-between; align-items:center">
-                                <a href="{item['url']}" target="_blank">🔗 View Assessment</a>
-                                <span class="relevance-badge">Relevance: {item['score']:.2f}</span>
+                                <a href="{item.get('url', '#')}" target="_blank">🔗 View Assessment</a>
+                                <span class="relevance-badge">Test Type: {' '.join(item.get('test_type', []))}</span>
                             </div>
+                            <p>{item.get('description', 'No description available.')}</p>
+                            <div>
+                                <strong>Duration:</strong> {item.get('duration', 'N/A')} minutes
+                                <br>
+                                <strong>Adaptive:</strong> {item.get('adaptive_support', 'No')}
+                                <br>
+                                <strong>Remote:</strong> {item.get('remote_support', 'No')}
+                            </div>
+                        </div>
                         """, unsafe_allow_html=True)
-                        
-                        if use_ai and item["ai_insights"]:
-                            st.markdown("""
-                            <div class="ai-insights">
-                                <strong>🧠 AI Analysis:</strong><br>
-                                {insights}
-                            </div>
-                            """.format(insights="<br>• ".join(item["ai_insights"].split("\n"))), 
-                            unsafe_allow_html=True)
-                        
-                        st.markdown("</div>", unsafe_allow_html=True)
                         
         except Exception as e:
             st.error(f"System error: {str(e)}")
@@ -113,4 +105,4 @@ if st.button("Find Assessments", type="primary") and query:
 
 # ---- Footer ----
 st.markdown("---")
-st.caption("SHL Assessment Recommender")
+st.caption("SHL Assessment Recommender © 2025")
